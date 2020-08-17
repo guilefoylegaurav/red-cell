@@ -1,12 +1,13 @@
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:red_cell/models/request.dart';
 import 'package:red_cell/models/user.dart';
 import 'package:red_cell/services/database.dart';
+import 'package:red_cell/utilities/compat.dart';
 import 'package:red_cell/utilities/spinner.dart';
-import 'package:red_cell/widgets/requestForm.dart';
-import '../screens/home.dart';
+
+import 'myTiles.dart';
+import 'otherTiles.dart';
 
 class RequestTiles extends StatefulWidget {
   @override
@@ -23,212 +24,104 @@ class _RequestTilesState extends State<RequestTiles> {
     } else {
       List<BloodRequest> requests =
           raw_requests.where((element) => element.status).toList();
-      return Container(
-        padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: requests.map((e) {
-              if (e.uid == user.uid) {
-                return MyReq(
-                  request: e,
-                );
-              }
-              return OtherReq(
-                request: e,
-              );
-            }).toList(),
-          ),
-        ),
+
+      return StreamProvider.value(
+        value: DatabaseService(uid: user.uid).userData,
+        child: Feed(requests: requests, id: user.uid),
       );
     }
   }
 }
 
-class OtherReq extends StatelessWidget {
-  BloodRequest request;
-  OtherReq({this.request});
+class Feed extends StatefulWidget {
+  const Feed({
+    Key key,
+    @required this.requests,
+    @required this.id,
+  }) : super(key: key);
 
+  final List<BloodRequest> requests;
+  final String id;
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      child: ListTile(
-        leading: CircleAvatar(
-          child: Text(
-            request.bg,
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.redAccent,
-        ),
-        title: RichText(
-          text: TextSpan(
-            children: <TextSpan>[
-              TextSpan(
-                  text: '${request.name}',
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
-              TextSpan(
-                  text: ' requires ${request.quantity} L',
-                  style: TextStyle(color: Colors.black, fontSize: 18)),
-            ],
-          ),
-        ),
-        subtitle: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Chip(
-              avatar: CircleAvatar(
-                backgroundColor: Colors.red,
-                child: Text(request.sex[0].toUpperCase()),
-              ),
-              label: Text('sex'),
-            ),
-            Chip(
-              avatar: CircleAvatar(
-                backgroundColor: Colors.red,
-                child: Text(
-                  '${request.age}',
-                ),
-              ),
-              label: Text('age'),
-            ),
-            FilterChip(
-              label: Text("${request.phone}",
-                  style: TextStyle(color: Colors.blue[700])),
-              onSelected: (value) {},
-            )
-          ],
-        ),
-      ),
-    );
-  }
+  _FeedState createState() => _FeedState();
 }
 
-class MyReq extends StatelessWidget {
-  BloodRequest request;
-  MyReq({this.request});
+class _FeedState extends State<Feed> {
+  List<BloodRequest> filteredRequests;
+  bool filter;
 
   @override
+  void initState() {
+    filter = false;
+    print(filter);
+
+    filteredRequests = widget.requests;
+    super.initState();
+  }
+
+  bool c = false;
+  @override
+  Future<Null> _reload() async {
+    await Future.delayed(Duration(seconds: 3));
+
+    setState(() {
+      filteredRequests = widget.requests;
+    });
+
+    return null;
+  }
+
   Widget build(BuildContext context) {
-    void openPage(int quantity, String rid) {
-      showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (context) {
-            dynamic user = Provider.of<User>(context);
-            String uid = user.uid;
+    UserData data = Provider.of<UserData>(context);
 
-            return StreamProvider.value(
-              value: DatabaseService(uid: uid).userData,
-              child: Container(
-                  height: MediaQuery.of(context).size.height * 0.25,
-                  padding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 60.0),
-                  child: SettingsForm(
-                    quantity: quantity,
-                    rid: rid,
-                  )),
-            );
-          });
-    }
+    if (data == null) {
+      return Loading();
+    } else {
+      dynamic canDonate = check(data.bg);
 
-    return Dismissible(
-      key: UniqueKey(),
-      onDismissed: (direction) async {
-        await DatabaseService(uid: request.uid).updateRequest(
-            request.rid,
-            request.name,
-            request.bg,
-            request.sex,
-            request.age,
-            request.quantity,
-            false,
-            request.phone);
-        Flushbar(
-          // There is also a messageText property for when you want to
-          // use a Text widget and not just a simple String
-          message: 'Request Archived',
-          // Even the button can be styled to your heart's content
-          mainButton: FlatButton(
-            child: Text(
-              'UNDO',
-              style: TextStyle(color: Colors.white),
-            ),
-            onPressed: () async {
-              await DatabaseService(uid: request.uid).updateRequest(
-                  request.rid,
-                  request.name,
-                  request.bg,
-                  request.sex,
-                  request.age,
-                  request.quantity,
-                  true,
-                  request.phone);
-            },
-          ),
-          duration: Duration(seconds: 3),
-          // Show it with a cascading operator
-        )..show(scaffoldKey.currentContext);
-      },
-      background: Container(color: Colors.red),
-      child: Card(
-        color: Colors.white,
-        child: ListTile(
-          onTap: () {
-            openPage(request.quantity, request.rid);
-          },
-          leading: CircleAvatar(
-            child: Text(
-              request.bg,
-              style: TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.redAccent,
-          ),
-          title: RichText(
-            text: TextSpan(
-              children: <TextSpan>[
-                TextSpan(
-                    text: '${request.name}',
-                    style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
-                TextSpan(
-                    text: ' requires ${request.quantity} L',
-                    style: TextStyle(color: Colors.black, fontSize: 18)),
+      return RefreshIndicator(
+        onRefresh: _reload,
+        child: Container(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Card(
+                  color: Colors.red,
+                  child: SwitchListTile(
+                      inactiveThumbColor: Colors.redAccent[700],
+                      activeColor: Colors.white,
+                      title: Text(
+                        "Compatible groups only",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      value: c,
+                      onChanged: (newV) {
+                        setState(() {
+                          c = newV;
+                          if (c == true) {
+                            filteredRequests = widget.requests.where((element) {
+                              return canDonate.contains(element.bg);
+                            }).toList();
+                          } else {
+                            filteredRequests = widget.requests;
+                          }
+                        });
+                      }),
+                ),
+                Container(
+                  child: Column(
+                    children: filteredRequests.map((e) {
+                      return OtherReq(
+                        request: e,
+                      );
+                    }).toList(),
+                  ),
+                ),
               ],
             ),
           ),
-          subtitle: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Chip(
-                avatar: CircleAvatar(
-                  backgroundColor: Colors.red,
-                  child: Text(request.sex[0].toUpperCase()),
-                ),
-                label: Text('sex'),
-              ),
-              Chip(
-                avatar: CircleAvatar(
-                  backgroundColor: Colors.red,
-                  child: Text(
-                    '${request.age}',
-                  ),
-                ),
-                label: Text('age'),
-              ),
-              FilterChip(
-                label: Text("${request.phone}",
-                    style: TextStyle(color: Colors.blue[700])),
-                onSelected: (value) {},
-              )
-            ],
-          ),
         ),
-      ),
-    );
+      );
+    }
   }
 }
