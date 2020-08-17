@@ -10,7 +10,9 @@ class Profile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
         title: Text("Profile"),
+        centerTitle: true,
       ),
       body: Container(
           padding: EdgeInsets.all(30),

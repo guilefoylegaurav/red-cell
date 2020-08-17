@@ -17,7 +17,7 @@ class _MyPageState extends State<MyPage> {
     User user = Provider.of<User>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text("Profile"),
+        title: Text("My Requests"),
         elevation: 0,
         centerTitle: true,
       ),
