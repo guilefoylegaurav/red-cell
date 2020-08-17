@@ -37,6 +37,7 @@ class Home extends StatelessWidget {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
+        elevation: 0,
         title: Text("Requests"),
         centerTitle: true,
         actions: [
@@ -53,11 +54,9 @@ class Home extends StatelessWidget {
       drawer: Drawer(
         child: DrawerList(),
       ),
-      body: Container(
-        child: StreamProvider.value(
-            value: DatabaseService(uid: user.uid).requests,
-            child: RequestTiles()),
-      ),
+      body: StreamProvider.value(
+          value: DatabaseService(uid: user.uid).requests,
+          child: RequestTiles()),
     );
   }
 }

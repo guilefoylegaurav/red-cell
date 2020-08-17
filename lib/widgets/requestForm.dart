@@ -49,7 +49,7 @@ class _SettingsFormState extends State<SettingsForm> {
                     height: 20,
                   ),
                   Text(
-                    '${quantity} L',
+                    '${quantity} units',
                     style: TextStyle(
                         fontSize: 20.0,
                         color:

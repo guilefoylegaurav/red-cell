@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:red_cell/screens/myRequests.dart';
 import 'package:red_cell/screens/profile.dart';
 import 'package:red_cell/screens/register.dart';
 import 'package:red_cell/screens/wrapper.dart';
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
           "/": (context) => Wrapper(),
           "/register": (context) => SignUp(),
           "/profile": (context) => Profile(),
+          "/myreq": (context) => MyPage(),
         },
       ),
     );

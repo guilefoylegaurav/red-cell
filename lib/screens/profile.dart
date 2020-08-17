@@ -93,18 +93,6 @@ class _PDState extends State<PD> {
                     onChanged: (val) => setState(() => _sex = val),
                   ),
                   SizedBox(height: 20.0),
-                  DropdownButtonFormField(
-                    decoration: InputDecoration(labelText: "BLOOD GROUP"),
-                    value: _group ?? userData.bg,
-                    items: blood_groups.map((g) {
-                      return DropdownMenuItem(
-                        value: g,
-                        child: Text(g),
-                      );
-                    }).toList(),
-                    onChanged: (val) => setState(() => _group = val),
-                  ),
-                  SizedBox(height: 20.0),
                   RaisedButton(
                       color: Colors.red,
                       child: Text(
