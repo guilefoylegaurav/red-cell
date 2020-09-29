@@ -38,7 +38,7 @@ class Home extends StatelessWidget {
       key: scaffoldKey,
       appBar: AppBar(
         elevation: 0,
-        title: Text("Requests"),
+        title: Text("Feed"),
         centerTitle: true,
         actions: [
           IconButton(
